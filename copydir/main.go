@@ -17,31 +17,27 @@ import (
 )
 
 var (
-	flagLocalDir  = flag.String("l", "", "local")
-	flagRemoteDir = flag.String("r", "", "remote")
-	alias         = "devmodel02-8077"
+	flagLocalDir   = flag.String("l", "", "local")
+	flagRemoteDir  = flag.String("r", "", "remote")
+	flagAlias      = flag.String("a", "", "alias")
+	flagConfigPath = flag.String("c", "", "config")
 )
 
 func main() {
 	flag.Parse()
-	aliasCfg := loadRcloneConfig()[alias]
+	startTime := time.Now()
+	logsParam := "[test]"
+	defer func(time1 time.Time) {
+		fmt.Println(fmt.Sprintf("%s end-cost Seconds:%v\n", logsParam, time.Since(time1)))
+	}(startTime)
+	aliasCfg := loadRcloneConfig()[*flagAlias]
 	copyDirToRemote(aliasCfg, flagLocalDir, flagRemoteDir)
-}
-
-// @brief：耗时统计函数
-func timeCost() func() {
-	start := time.Now()
-	return func() {
-		tc := time.Since(start)
-		fmt.Printf("time cost = %v\n", tc)
-	}
 }
 
 func copyDirToRemote(aliasCfg interface{}, ld, rd *string) {
 	if ld == nil || rd == nil {
 		panic("local or remote dir is nil")
 	}
-	defer timeCost()
 	lbs, err := filesystem.NewBlobStore(filesystem.KindLocal, "/", nil)
 	if err != nil {
 		panic(err)
@@ -75,7 +71,7 @@ func copyDirToRemote(aliasCfg interface{}, ld, rd *string) {
 }
 
 func loadRcloneConfig() rc.Params {
-	err := config.SetConfigPath("/Users/jojo/.config/rclone/rclone.conf")
+	err := config.SetConfigPath(*flagConfigPath)
 	if err != nil {
 		panic(err)
 	}
